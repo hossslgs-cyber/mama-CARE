@@ -1,0 +1,9 @@
+{
+  "name": "MamaCare",
+  "short_name": "MamaCare",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f766e",
+  "description": "Offline-first maternal health tracking for community health workers in Sierra Leone."
+}
