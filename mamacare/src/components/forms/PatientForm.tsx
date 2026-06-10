@@ -14,7 +14,12 @@ export function PatientForm() {
     resolver,
   });
 
+  const [error, setError] = useState('');
+
   const onSubmit = async (values: PatientFormValues) => {
+    setMessage('');
+    setError('');
+
     const patient: PatientRecord = {
       id: crypto.randomUUID(),
       full_name: values.full_name,
@@ -33,18 +38,28 @@ export function PatientForm() {
       updated_at: new Date().toISOString(),
     };
 
-    await putRecord('patients', patient);
+    try {
+      await putRecord('patients', patient);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to save patient record: ${detail}`);
+      return;
+    }
 
-    const queueItem: SyncQueueItem = {
-      id: crypto.randomUUID(),
-      table: 'patients',
-      operation: 'create',
-      payload: patient,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    };
+    try {
+      const queueItem: SyncQueueItem = {
+        id: crypto.randomUUID(),
+        table: 'patients',
+        operation: 'create',
+        payload: patient,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      await putRecord('syncQueue', queueItem);
+    } catch (err) {
+      console.error('Failed to queue patient for sync', err);
+    }
 
-    await putRecord('syncQueue', queueItem);
     setMessage(`Saved patient ${patient.full_name} offline.`);
   };
 
@@ -114,6 +129,7 @@ export function PatientForm() {
       <button type="submit" disabled={isSubmitting} className="rounded-2xl bg-teal-700 px-4 py-3 text-base font-semibold text-white disabled:opacity-60">
         {isSubmitting ? 'Saving...' : 'Save patient offline'}
       </button>
+      {error ? <p className="text-sm text-rose-600">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
     </form>
   );
