@@ -4,9 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useRouter } from 'next/navigation';
 import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
 import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth/session';
+import { SESSION_TIMEOUT_MS } from '@/lib/constants';
 import type { UserProfile } from '@/types';
-
-const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 const SESSION_STORAGE_KEY = 'mamacare-session';
 
 interface AuthSession extends UserProfile {

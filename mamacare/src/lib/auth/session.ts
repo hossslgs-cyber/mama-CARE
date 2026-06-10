@@ -1,4 +1,6 @@
-export const AUTH_COOKIE_NAME = 'mamacare-auth';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
+
+export { AUTH_COOKIE_NAME };
 
 export interface SessionCookiePayload {
   phone: string;

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const AUTH_COOKIE_NAME = 'mamacare-auth';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
 
 function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff');

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ShieldCheck, Smartphone } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { Button } from '@/components/ui';
 
 export default function LoginPage() {
   const { loginWithPhone, verifyOtp } = useAuth();
@@ -63,14 +64,9 @@ export default function LoginPage() {
                   placeholder="+232 76 123 456"
                 />
               </div>
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={submitting}
-                className="w-full rounded-2xl bg-teal-700 px-4 py-3 text-base font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
+              <Button type="button" onClick={handleSendOtp} disabled={submitting}>
                 {submitting ? 'Sending...' : 'Send OTP'}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="mt-6 space-y-4">
@@ -82,21 +78,12 @@ export default function LoginPage() {
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none"
                 placeholder="Enter 6-digit code"
               />
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={submitting}
-                className="w-full rounded-2xl bg-teal-700 px-4 py-3 text-base font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
+              <Button type="button" onClick={handleVerify} disabled={submitting}>
                 {submitting ? 'Verifying...' : 'Verify code'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep('phone')}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700"
-              >
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setStep('phone')}>
                 Change phone number
-              </button>
+              </Button>
             </div>
           )}
 
