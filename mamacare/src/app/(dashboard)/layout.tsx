@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import {
@@ -28,7 +29,11 @@ const nurseNav = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { session, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const pathname = usePathname();
+
+  if (!mounted) return null;
 
   if (!session) {
     return (
