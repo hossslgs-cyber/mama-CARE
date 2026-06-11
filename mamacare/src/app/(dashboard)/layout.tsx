@@ -1,13 +1,17 @@
 "use client";
 
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 
+const subscribe = () => () => {};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { session, logout } = useAuth();
+  const hydrated = useSyncExternalStore(subscribe, () => true, () => false);
 
-  if (!session) {
-    return <main className="p-6 text-slate-700">Loading session…</main>;
+  if (!hydrated || !session) {
+    return <div className="min-h-screen bg-slate-50 p-6 text-slate-700">Loading session…</div>;
   }
 
   return (
