@@ -137,14 +137,17 @@ export function VisitForm({ patientId }: VisitFormProps) {
           <label className="space-y-1">
             <span className="text-sm font-medium text-slate-700">Weight (kg)</span>
             <input type="number" step="0.1" {...register('weight')} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+            {errors.weight && <p className="text-xs text-rose-600">{errors.weight.message}</p>}
           </label>
           <label className="space-y-1">
             <span className="text-sm font-medium text-slate-700">Fundal Height (cm)</span>
             <input type="number" {...register('fundal_height')} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+            {errors.fundal_height && <p className="text-xs text-rose-600">{errors.fundal_height.message}</p>}
           </label>
           <label className="space-y-1">
             <span className="text-sm font-medium text-slate-700">Fetal Heart Rate (bpm)</span>
             <input type="number" {...register('fetal_heart_rate')} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
+            {errors.fetal_heart_rate && <p className="text-xs text-rose-600">{errors.fetal_heart_rate.message}</p>}
           </label>
         </div>
 

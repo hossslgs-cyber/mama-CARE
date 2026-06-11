@@ -48,6 +48,27 @@ function saveStoredSession(session: AuthSession | null) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => {
+    // Check for 'mamacare-auth' cookie first
+    if (typeof window !== 'undefined') {
+      try {
+        const match = document.cookie
+          .split('; ')
+          .find(row => row.trim().startsWith('mamacare-auth='));
+        if (match) {
+          const payload = JSON.parse(decodeURIComponent(match.split('=')[1]));
+          if (payload.role && payload.expiresAt && payload.expiresAt > Date.now()) {
+            return {
+              id: payload.userId,
+              phone: payload.userId,
+              role: payload.role,
+              name: payload.role === 'nurse' ? 'District Nurse' : 'Community Health Worker',
+              lastActiveAt: Date.now(),
+            };
+          }
+        }
+      } catch {}
+    }
+
     const stored = getStoredSession();
     const cookie = getAuthCookie();
 

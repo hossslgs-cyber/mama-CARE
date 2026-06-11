@@ -37,6 +37,21 @@ export default function LoginPage() {
     setSubmitting(false);
   };
 
+  // Demo login - bypasses phone OTP for hackathon
+  const handleDemoLogin = (role: 'chw' | 'nurse') => {
+    const payload = {
+      role,
+      userId: `demo-${role}`,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    };
+    
+    // Set cookie explicitly with path=/ and max-age=86400
+    document.cookie = `mamacare-auth=${encodeURIComponent(JSON.stringify(payload))}; path=/; max-age=86400; SameSite=Lax`;
+    
+    // Force page reload using window.location.href to trigger middleware
+    window.location.href = role === 'nurse' ? '/nurse' : '/chw';
+  };
+
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#ecfeff_0%,#fff_45%,#f0fdf4_100%)] p-4 text-slate-900">
       <section className="mx-auto flex min-h-screen max-w-md items-center justify-center">
@@ -101,6 +116,32 @@ export default function LoginPage() {
           )}
 
           {message ? <p className="mt-4 text-sm text-slate-700">{message}</p> : null}
+
+          {/* Demo Login Section */}
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <p className="text-xs text-center text-slate-400 uppercase tracking-wider mb-4">
+              Hackathon Demo Access
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('chw')}
+                className="rounded-2xl border-2 border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 hover:bg-green-100 transition-colors"
+              >
+                👩‍⚕️ CHW Login
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('nurse')}
+                className="rounded-2xl border-2 border-purple-200 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
+              >
+                👨‍⚕️ Nurse Login
+              </button>
+            </div>
+            <p className="text-xs text-center text-slate-400 mt-3">
+              Bypasses phone OTP for demo purposes
+            </p>
+          </div>
         </article>
       </section>
     </main>
