@@ -66,7 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuthCookie();
     saveStoredSession(null);
     setSession(null);
-    void supabase.auth.signOut().catch(() => undefined);
+    void supabase.auth.signOut().catch((err: unknown) => {
+      console.error('Supabase signOut failed', err);
+    });
     router.push('/login');
   }, [router]);
 

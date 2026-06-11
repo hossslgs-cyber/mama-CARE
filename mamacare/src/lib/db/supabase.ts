@@ -9,12 +9,10 @@ export function isSupabaseConfigured(): boolean {
 
 function createSupabaseClient(): SupabaseClient {
   if (!isSupabaseConfigured()) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(
-        '[MamaCare] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are not set. ' +
-        'Running in offline-only mode.'
-      );
-    }
+    console.warn(
+      '[MamaCare] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are not set. ' +
+      'Running in offline-only mode.'
+    );
     // Return a client with placeholder values; callers must check isSupabaseConfigured() first
     return createClient('http://localhost', 'placeholder', {
       auth: { persistSession: false, autoRefreshToken: false },
