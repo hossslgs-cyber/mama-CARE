@@ -5,7 +5,7 @@ const AUTH_COOKIE_NAME = 'mamacare-auth';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtected = pathname === '/chw' || pathname === '/nurse';
+  const isProtected = pathname.startsWith('/chw') || pathname.startsWith('/nurse');
 
   if (!isProtected) {
     return NextResponse.next();
@@ -33,5 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/chw', '/nurse'],
+  matcher: ['/chw/:path*', '/nurse/:path*'],
 };

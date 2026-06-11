@@ -6,7 +6,12 @@ export function calculateTriage(visit: Partial<VisitRecord>): DecisionTreeResult
 
   // Blood Pressure Check
   if (visit.blood_pressure) {
-    const [systolic, diastolic] = visit.blood_pressure.split('/').map(Number);
+    const match = visit.blood_pressure.match(/^(\d{2,3})\/(\d{2,3})$/);
+    if (!match) {
+      return { triage_level: 'unknown', reason: 'Invalid blood pressure format' } as any;
+    }
+    const systolic = parseInt(match[1], 10);
+    const diastolic = parseInt(match[2], 10);
     if (systolic >= 140 || diastolic >= 90) {
       riskScore += 2;
       actionSteps.push('Immediate referral to hospital for hypertension.');
@@ -25,7 +30,10 @@ export function calculateTriage(visit: Partial<VisitRecord>): DecisionTreeResult
   }
 
   // Symptoms Check
-  const dangerSymptoms = ['Headache', 'Blurred vision', 'Severe abdominal pain', 'Vaginal bleeding'];
+  const dangerSymptoms = [
+    'Headache', 'Blurred vision', 'Severe abdominal pain', 'Vaginal bleeding',
+    'Swelling (Edema)', 'Fever', 'Reduced fetal movement'
+  ];
   const activeDangerSymptoms = visit.symptoms?.filter(s => dangerSymptoms.includes(s)) || [];
 
   if (activeDangerSymptoms.length > 0) {

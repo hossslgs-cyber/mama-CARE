@@ -4,7 +4,9 @@ import type { SyncQueueItem } from '@/types';
 
 export async function processSyncQueue() {
   const queue = await getAllRecords<SyncQueueItem>('syncQueue');
-  const pendingItems = queue.filter(item => item.status === 'pending');
+  const pendingItems = queue
+    .filter(item => item.status === 'pending')
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
   if (pendingItems.length === 0) return { success: true, count: 0 };
 
