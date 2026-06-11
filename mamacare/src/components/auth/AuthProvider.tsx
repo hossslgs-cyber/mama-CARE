@@ -120,12 +120,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOtp = useCallback(async (phone: string, code: string) => {
     try {
+      let role: UserProfile['role'] = 'chw';
+
       if (isSupabaseConfigured()) {
         const { data, error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
         if (error || !data.session) throw error ?? new Error('No session returned.');
+
+        // Derive role from Supabase user metadata (set by admin), default to 'chw'
+        const userRole = data.user?.user_metadata?.role as string | undefined;
+        if (userRole === 'nurse') {
+          role = 'nurse';
+        }
       }
 
-      const role: UserProfile['role'] = phone.includes('nurse') ? 'nurse' : 'chw';
       const nextSession: AuthSession = {
         id: phone,
         phone,
