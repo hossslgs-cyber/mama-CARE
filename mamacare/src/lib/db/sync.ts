@@ -3,6 +3,7 @@ import { getAllRecords, putRecord, deleteRecord, getRecord } from './indexeddb';
 import type { SyncQueueItem } from '@/types';
 
 export async function processSyncQueue() {
+  const MAX_RETRIES = 3;
   const queue = await getAllRecords<SyncQueueItem>('syncQueue');
   const pendingItems = queue
     .filter(item => item.status === 'pending')
@@ -30,7 +31,9 @@ export async function processSyncQueue() {
       syncedCount++;
     } catch (err) {
       console.error(`Failed to sync item ${item.id}:`, err);
-      await putRecord('syncQueue', { ...item, status: 'failed' });
+      const retryCount = ((item as any).retryCount || 0) + 1;
+      const status = retryCount > MAX_RETRIES ? 'failed' : 'pending';
+      await putRecord('syncQueue', { ...item, status, retryCount } as any);
     }
   }
 

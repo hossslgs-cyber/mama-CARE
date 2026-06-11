@@ -18,8 +18,19 @@ export function middleware(request: NextRequest) {
 
   try {
     const payload = JSON.parse(decodeURIComponent(cookie)) as { role?: 'chw' | 'nurse'; expiresAt?: number };
-    if (!payload.role || (payload.expiresAt ?? 0) < Date.now()) {
-      return NextResponse.redirect(new URL('/login', request.url));
+    
+    // Verify the cookie has both 'role' and 'expiresAt' fields
+    if (!payload.role || payload.expiresAt === undefined) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete(AUTH_COOKIE_NAME);
+      return response;
+    }
+
+    // If expiresAt is in the past, clear the cookie and redirect to /login
+    if (payload.expiresAt < Date.now()) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete(AUTH_COOKIE_NAME);
+      return response;
     }
 
     if (pathname === '/nurse' && payload.role !== 'nurse') {
@@ -28,7 +39,9 @@ export function middleware(request: NextRequest) {
 
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.cookies.delete(AUTH_COOKIE_NAME);
+    return response;
   }
 }
 

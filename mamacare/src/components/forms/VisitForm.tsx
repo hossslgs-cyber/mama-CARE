@@ -39,7 +39,16 @@ export function VisitForm({ patientId }: VisitFormProps) {
       urine: values.urine || undefined,
       symptoms: values.symptoms,
       notes: values.notes || undefined,
-      chw_id: 'demo-chw',
+      chw_id: (typeof window !== 'undefined' ? (localStorage.getItem('mamacare-user-id') || (() => {
+        try {
+          const match = document.cookie.match(/mamacare-auth=([^;]+)/);
+          if (match) {
+            const payload = JSON.parse(decodeURIComponent(match[1]));
+            return payload.userId || payload.id || null;
+          }
+        } catch {}
+        return null;
+      })()) : null) || 'demo-chw',
       created_at: new Date().toISOString(),
     };
 

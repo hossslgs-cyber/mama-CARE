@@ -17,7 +17,8 @@ export function NurseRiskFeed() {
       const { data: visits } = await supabase
         .from('visits')
         .select('*, patients(*)')
-        .order('visit_date', { ascending: false });
+        .order('visit_date', { ascending: false })
+        .limit(50);
 
       if (visits) {
         const highRisk = visits

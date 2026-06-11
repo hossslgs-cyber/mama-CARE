@@ -17,7 +17,7 @@ export function NurseAnalytics() {
 
   useEffect(() => {
     async function loadStats() {
-      const { data: visits } = await supabase.from('visits').select('*, patients(*)');
+      const { data: visits } = await supabase.from('visits').select('*, patients(*)').limit(100);
       const { data: patients } = await supabase.from('patients').select('village');
 
       if (visits && patients) {
