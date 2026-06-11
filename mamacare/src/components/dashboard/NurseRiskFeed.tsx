@@ -21,6 +21,16 @@ export function NurseRiskFeed() {
 
   useEffect(() => {
     async function loadHighRiskCases() {
+      // Skip Supabase query if user has no real auth session (demo / anon users)
+      // This prevents RLS error 42501 "permission denied" for unauthenticated queries
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession) {
+        setAlerts(DEMO_ALERTS);
+        setIsDemo(true);
+        setLoading(false);
+        return;
+      }
+
       const { data: visits, error: visitsError } = await supabase
         .from('visits')
         .select('*, patients(*)')
@@ -29,7 +39,6 @@ export function NurseRiskFeed() {
 
       if (visitsError) {
         console.error('Failed to load risk alerts — code:', visitsError.code, '| message:', visitsError.message);
-        // Graceful fallback: show demo data instead of a blank error screen
         setAlerts(DEMO_ALERTS);
         setIsDemo(true);
         setLoading(false);

@@ -25,13 +25,22 @@ export function NurseAnalytics() {
 
   useEffect(() => {
     async function loadStats() {
+      // Skip Supabase query if user has no real auth session (demo / anon users)
+      // This prevents RLS error 42501 "permission denied" for unauthenticated queries
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession) {
+        setStats(DEMO_STATS);
+        setIsDemo(true);
+        setLoading(false);
+        return;
+      }
+
       const { data: visits, error: visitsError } = await supabase.from('visits').select('*, patients(*)').limit(100);
       const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
 
       if (visitsError || patientsError) {
         const err = visitsError || patientsError;
         console.error('Failed to load analytics — code:', err?.code, '| message:', err?.message);
-        // Graceful fallback: show demo stats
         setStats(DEMO_STATS);
         setIsDemo(true);
         setLoading(false);
