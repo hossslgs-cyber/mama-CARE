@@ -16,6 +16,7 @@ interface VisitFormProps {
 export function VisitForm({ patientId }: VisitFormProps) {
   const [triage, setTriage] = useState<DecisionTreeResult | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<VisitFormValues>({
     resolver: zodResolver(visitSchema),
@@ -54,23 +55,28 @@ export function VisitForm({ patientId }: VisitFormProps) {
 
     // Calculate Triage
     const triageResult = calculateTriage(visit);
-    setTriage(triageResult);
 
-    // Save to IDB
-    await putRecord('visits', visit);
+    try {
+      // Save to IDB
+      await putRecord('visits', visit);
 
-    // Queue for sync
-    const queueItem: SyncQueueItem = {
-      id: crypto.randomUUID(),
-      table: 'visits',
-      operation: 'create',
-      payload: visit,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    };
-    await putRecord('syncQueue', queueItem);
+      // Queue for sync
+      const queueItem: SyncQueueItem = {
+        id: crypto.randomUUID(),
+        table: 'visits',
+        operation: 'create',
+        payload: visit,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      await putRecord('syncQueue', queueItem);
 
-    setIsSaved(true);
+      setTriage(triageResult);
+      setIsSaved(true);
+    } catch (err) {
+      console.error(err);
+      setSubmitError("Failed to save. Please try again.");
+    }
   };
 
   const symptomOptions = useMemo(() => [
@@ -158,6 +164,10 @@ export function VisitForm({ patientId }: VisitFormProps) {
           <span className="text-sm font-medium text-slate-700">Clinical Notes</span>
           <textarea {...register('notes')} rows={3} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" />
         </label>
+
+        {submitError && (
+          <p className="text-sm font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-2xl p-4">{submitError}</p>
+        )}
 
         <button
           type="submit"

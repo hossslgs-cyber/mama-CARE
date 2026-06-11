@@ -14,11 +14,19 @@ export function NurseAnalytics() {
     villageStats: [] as any[]
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStats() {
-      const { data: visits } = await supabase.from('visits').select('*, patients(*)').limit(100);
-      const { data: patients } = await supabase.from('patients').select('village');
+      const { data: visits, error: visitsError } = await supabase.from('visits').select('*, patients(*)').limit(100);
+      const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
+
+      if (visitsError || patientsError) {
+        console.error('Failed to load analytics:', visitsError || patientsError);
+        setError('Failed to load data. Please refresh.');
+        setLoading(false);
+        return;
+      }
 
       if (visits && patients) {
         let red = 0, yellow = 0, green = 0;
@@ -49,6 +57,14 @@ export function NurseAnalytics() {
   }, []);
 
   if (loading) return <div className="h-48 animate-pulse rounded-[2.5rem] bg-slate-50" />;
+
+  if (error) {
+    return (
+      <div className="rounded-[2.5rem] border border-rose-100 bg-rose-50 p-8 text-center text-rose-800 font-medium">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

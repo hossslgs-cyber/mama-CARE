@@ -10,15 +10,23 @@ import Link from 'next/link';
 export function NurseRiskFeed() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHighRiskCases() {
       // Fetch latest visits and patients from Supabase
-      const { data: visits } = await supabase
+      const { data: visits, error: visitsError } = await supabase
         .from('visits')
         .select('*, patients(*)')
         .order('visit_date', { ascending: false })
         .limit(50);
+
+      if (visitsError) {
+        console.error('Failed to load risk alerts:', visitsError);
+        setError('Failed to load risk alerts');
+        setLoading(false);
+        return;
+      }
 
       if (visits) {
         const highRisk = visits
@@ -33,6 +41,14 @@ export function NurseRiskFeed() {
   }, []);
 
   if (loading) return <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-[2rem]" />)}</div>;
+
+  if (error) {
+    return (
+      <div className="py-12 text-center rounded-[2.5rem] border border-rose-100 bg-rose-50 text-rose-800 font-medium">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
