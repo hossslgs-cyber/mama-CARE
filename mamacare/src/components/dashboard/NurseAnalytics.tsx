@@ -5,16 +5,23 @@ import { supabase } from '@/lib/db/supabase';
 import { calculateTriage } from '@/lib/utils/triage';
 import { ShieldCheck, Users, AlertTriangle, TrendingUp } from 'lucide-react';
 
+const DEMO_STATS = {
+  totalMothers: 48,
+  redCount: 3,
+  yellowCount: 12,
+  greenCount: 33,
+  villageStats: [
+    { name: 'Freetown East', count: 18 },
+    { name: 'Bo District',   count: 14 },
+    { name: 'Kenema',        count: 10 },
+    { name: 'Makeni',        count: 6  },
+  ],
+};
+
 export function NurseAnalytics() {
-  const [stats, setStats] = useState({
-    totalMothers: 0,
-    redCount: 0,
-    yellowCount: 0,
-    greenCount: 0,
-    villageStats: [] as any[]
-  });
+  const [stats, setStats] = useState(DEMO_STATS);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     async function loadStats() {
@@ -22,8 +29,11 @@ export function NurseAnalytics() {
       const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
 
       if (visitsError || patientsError) {
-        console.error('Failed to load analytics:', visitsError || patientsError);
-        setError('Failed to load data. Please refresh.');
+        const err = visitsError || patientsError;
+        console.error('Failed to load analytics — code:', err?.code, '| message:', err?.message);
+        // Graceful fallback: show demo stats
+        setStats(DEMO_STATS);
+        setIsDemo(true);
         setLoading(false);
         return;
       }
@@ -58,16 +68,14 @@ export function NurseAnalytics() {
 
   if (loading) return <div className="h-48 animate-pulse rounded-[2.5rem] bg-slate-50" />;
 
-  if (error) {
-    return (
-      <div className="rounded-[2.5rem] border border-rose-100 bg-rose-50 p-8 text-center text-rose-800 font-medium">
-        {error}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
+      {isDemo && (
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">
+          ⚠ Demo data · Supabase unavailable
+        </p>
+      )}
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Population</p>

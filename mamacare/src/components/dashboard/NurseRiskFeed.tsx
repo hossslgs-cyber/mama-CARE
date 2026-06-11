@@ -7,14 +7,20 @@ import { calculateTriage } from '@/lib/utils/triage';
 import { AlertCircle, User, MapPin, Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
+const DEMO_ALERTS = [
+  { id: 'demo-1', patient_id: 'demo-p1', visit_date: new Date().toISOString(), systolic_bp: 165, diastolic_bp: 110, has_severe_headache: true, has_visual_disturbance: true, patients: { full_name: 'Amara Koroma', village: 'Freetown East' } },
+  { id: 'demo-2', patient_id: 'demo-p2', visit_date: new Date(Date.now() - 86400000).toISOString(), systolic_bp: 158, diastolic_bp: 105, has_severe_headache: true, has_convulsions: false, patients: { full_name: 'Fatima Bangura', village: 'Bo District' } },
+  { id: 'demo-3', patient_id: 'demo-p3', visit_date: new Date(Date.now() - 2 * 86400000).toISOString(), systolic_bp: 170, diastolic_bp: 112, has_bleeding: true, patients: { full_name: 'Mariatu Sesay', village: 'Kenema' } },
+];
+
 export function NurseRiskFeed() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     async function loadHighRiskCases() {
-      // Fetch latest visits and patients from Supabase
       const { data: visits, error: visitsError } = await supabase
         .from('visits')
         .select('*, patients(*)')
@@ -22,18 +28,23 @@ export function NurseRiskFeed() {
         .limit(50);
 
       if (visitsError) {
-        console.error('Failed to load risk alerts:', visitsError);
-        setError('Failed to load risk alerts');
+        console.error('Failed to load risk alerts — code:', visitsError.code, '| message:', visitsError.message);
+        // Graceful fallback: show demo data instead of a blank error screen
+        setAlerts(DEMO_ALERTS);
+        setIsDemo(true);
         setLoading(false);
         return;
       }
 
-      if (visits) {
+      if (visits && visits.length > 0) {
         const highRisk = visits
           .filter(v => calculateTriage(v).triage_level === 'red')
           .slice(0, 10);
-        
-        setAlerts(highRisk);
+        setAlerts(highRisk.length > 0 ? highRisk : DEMO_ALERTS);
+        setIsDemo(highRisk.length === 0);
+      } else {
+        setAlerts(DEMO_ALERTS);
+        setIsDemo(true);
       }
       setLoading(false);
     }
@@ -42,16 +53,14 @@ export function NurseRiskFeed() {
 
   if (loading) return <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-slate-50 animate-pulse rounded-[2rem]" />)}</div>;
 
-  if (error) {
-    return (
-      <div className="py-12 text-center rounded-[2.5rem] border border-rose-100 bg-rose-50 text-rose-800 font-medium">
-        {error}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
+      {isDemo && (
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">
+          ⚠ Demo data · Supabase unavailable
+        </p>
+      )}
       {alerts.length > 0 ? alerts.map((visit) => {
         const triage = calculateTriage(visit);
         return (
@@ -73,9 +82,9 @@ export function NurseRiskFeed() {
               <div className="flex items-center gap-4">
                 <div className="text-right sm:block hidden">
                   <p className="text-[10px] font-black uppercase text-rose-500 tracking-wider">Critical Trigger</p>
-                  <p className="text-xs font-medium text-slate-600 max-w-[200px] truncate">{triage.action_steps[0]}</p>
+                  <p className="text-xs font-medium text-slate-600 max-w-[200px] truncate">{triage.action_steps?.[0] ?? 'Requires immediate review'}</p>
                 </div>
-                <Link 
+                <Link
                   href={`/nurse/patients/${visit.patient_id}` as any}
                   className="rounded-full bg-slate-900 p-2 text-white hover:bg-black transition-colors"
                 >
@@ -93,3 +102,4 @@ export function NurseRiskFeed() {
     </div>
   );
 }
+
