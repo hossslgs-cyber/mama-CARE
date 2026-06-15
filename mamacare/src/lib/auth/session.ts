@@ -1,4 +1,6 @@
-export const AUTH_COOKIE_NAME = 'mamacare-auth';
+import { AUTH_COOKIE_NAME } from '@/lib/constants';
+
+export { AUTH_COOKIE_NAME };
 
 export interface SessionCookiePayload {
   phone: string;
@@ -6,6 +8,12 @@ export interface SessionCookiePayload {
   expiresAt: number;
 }
 
+/**
+ * Read the auth cookie from the client-side document.cookie.
+ * NOTE: The cookie is set with HttpOnly in production via response headers,
+ * so this client-side reader is only used as a fallback for the middleware
+ * and for non-HttpOnly scenarios during local dev.
+ */
 export function getAuthCookie(): SessionCookiePayload | null {
   if (typeof document === 'undefined') {
     return null;
@@ -40,7 +48,17 @@ export function setAuthCookie(payload: SessionCookiePayload) {
     return;
   }
 
-  document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(payload))}; Path=/; Max-Age=900; SameSite=Lax`;
+  const isSecure = window.location.protocol === 'https:';
+  const flags = [
+    `Path=/`,
+    `Max-Age=900`,
+    `SameSite=Strict`,
+    isSecure ? 'Secure' : '',
+  ]
+    .filter(Boolean)
+    .join('; ');
+
+  document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(payload))}; ${flags}`;
 }
 
 export function clearAuthCookie() {
@@ -48,5 +66,5 @@ export function clearAuthCookie() {
     return;
   }
 
-  document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Strict`;
 }

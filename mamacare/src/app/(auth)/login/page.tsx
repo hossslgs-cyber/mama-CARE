@@ -3,6 +3,7 @@
 import { useState, useCallback, MouseEvent as RMouseEvent } from 'react';
 import { ShieldCheck, Smartphone, KeyRound, ArrowRight, Heart } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { Button } from '@/components/ui';
 
 /* ── Ripple ── */
 function useRipple() {
@@ -112,6 +113,7 @@ export default function LoginPage() {
                   placeholder="+232 76 123 456"
                 />
               </div>
+<<<<<<< HEAD
               <button
                 id="send-otp-btn"
                 type="button"
@@ -162,6 +164,28 @@ export default function LoginPage() {
               >
                 ← Change phone number
               </button>
+=======
+              <Button type="button" onClick={handleSendOtp} disabled={submitting}>
+                {submitting ? 'Sending...' : 'Send OTP'}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-4">
+              <label className="block text-sm font-medium text-slate-700">Verification code</label>
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                inputMode="numeric"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none"
+                placeholder="Enter 6-digit code"
+              />
+              <Button type="button" onClick={handleVerify} disabled={submitting}>
+                {submitting ? 'Verifying...' : 'Verify code'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setStep('phone')}>
+                Change phone number
+              </Button>
+>>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
             </div>
           )}
 

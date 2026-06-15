@@ -4,9 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useRouter } from 'next/navigation';
 import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
 import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth/session';
+import { SESSION_TIMEOUT_MS } from '@/lib/constants';
 import type { UserProfile } from '@/types';
-
-const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 const SESSION_STORAGE_KEY = 'mamacare-session';
 
 interface AuthSession extends UserProfile {
@@ -87,7 +86,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuthCookie();
     saveStoredSession(null);
     setSession(null);
-    void supabase.auth.signOut().catch(() => undefined);
+    void supabase.auth.signOut().catch((err: unknown) => {
+      console.error('Supabase signOut failed', err);
+    });
     router.push('/login');
   }, [router]);
 
@@ -141,12 +142,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOtp = useCallback(async (phone: string, code: string) => {
     try {
+      let role: UserProfile['role'] = 'chw';
+
       if (isSupabaseConfigured()) {
         const { data, error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
         if (error || !data.session) throw error ?? new Error('No session returned.');
+
+        // Derive role from Supabase user metadata (set by admin), default to 'chw'
+        const userRole = data.user?.user_metadata?.role as string | undefined;
+        if (userRole === 'nurse') {
+          role = 'nurse';
+        }
       }
 
-      const role: UserProfile['role'] = phone.includes('nurse') ? 'nurse' : 'chw';
       const nextSession: AuthSession = {
         id: phone,
         phone,

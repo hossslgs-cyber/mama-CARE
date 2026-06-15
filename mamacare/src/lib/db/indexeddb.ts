@@ -28,25 +28,57 @@ export async function openMamaCareDB(): Promise<IDBPDatabase> {
 
 export async function putRecord<T extends { id: string }>(storeName: StoreName, value: T) {
   const db = await openMamaCareDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  await tx.objectStore(storeName).put(value);
-  await tx.done;
-  return value;
+  try {
+    const tx = db.transaction(storeName, 'readwrite');
+    await tx.objectStore(storeName).put(value);
+    await tx.done;
+    return value;
+  } catch (error) {
+    throw new Error(
+      `IndexedDB put failed on "${storeName}": ${error instanceof Error ? error.message : String(error)}`
+    );
+  } finally {
+    db.close();
+  }
 }
 
 export async function getRecord<T>(storeName: StoreName, id: string): Promise<T | undefined> {
   const db = await openMamaCareDB();
-  return db.get(storeName, id) as Promise<T | undefined>;
+  try {
+    return await (db.get(storeName, id) as Promise<T | undefined>);
+  } catch (error) {
+    throw new Error(
+      `IndexedDB get failed on "${storeName}" (id=${id}): ${error instanceof Error ? error.message : String(error)}`
+    );
+  } finally {
+    db.close();
+  }
 }
 
 export async function getAllRecords<T>(storeName: StoreName): Promise<T[]> {
   const db = await openMamaCareDB();
-  return db.getAll(storeName) as Promise<T[]>;
+  try {
+    return await (db.getAll(storeName) as Promise<T[]>);
+  } catch (error) {
+    throw new Error(
+      `IndexedDB getAll failed on "${storeName}": ${error instanceof Error ? error.message : String(error)}`
+    );
+  } finally {
+    db.close();
+  }
 }
 
 export async function deleteRecord(storeName: StoreName, id: string) {
   const db = await openMamaCareDB();
-  const tx = db.transaction(storeName, 'readwrite');
-  await tx.objectStore(storeName).delete(id);
-  await tx.done;
+  try {
+    const tx = db.transaction(storeName, 'readwrite');
+    await tx.objectStore(storeName).delete(id);
+    await tx.done;
+  } catch (error) {
+    throw new Error(
+      `IndexedDB delete failed on "${storeName}" (id=${id}): ${error instanceof Error ? error.message : String(error)}`
+    );
+  } finally {
+    db.close();
+  }
 }

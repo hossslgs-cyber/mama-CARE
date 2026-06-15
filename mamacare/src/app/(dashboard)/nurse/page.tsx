@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -6,6 +7,9 @@ import { supabase } from '@/lib/db/supabase';
 import { NurseRiskFeed } from '@/components/dashboard/NurseRiskFeed';
 import { NurseAnalytics } from '@/components/dashboard/NurseAnalytics';
 import { Search, Filter, Download } from 'lucide-react';
+=======
+import { PageHeader } from '@/components/ui';
+>>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
 
 export default function NurseHomePage() {
   const [chwActivity, setChwActivity] = useState<any[]>([]);
@@ -68,6 +72,7 @@ export default function NurseHomePage() {
   };
 
   return (
+<<<<<<< HEAD
     <div className="space-y-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -153,5 +158,14 @@ export default function NurseHomePage() {
         </aside>
       </div>
     </div>
+=======
+    <section className="space-y-3">
+      <PageHeader
+        label="Nurse Dashboard"
+        title="District nurse overview"
+        description="Role-based access is now in place. Later phases will add the full patient reviews and filters here."
+      />
+    </section>
+>>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
   );
 }

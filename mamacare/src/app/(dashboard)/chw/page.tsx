@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { AnalyticsSummary } from '@/components/dashboard/AnalyticsSummary';
 import Link from 'next/link';
@@ -35,5 +36,18 @@ export default function CHWHomePage() {
         <RecentActivity />
       </section>
     </div>
+=======
+import { PageHeader } from '@/components/ui';
+
+export default function CHWHomePage() {
+  return (
+    <section className="space-y-3">
+      <PageHeader
+        label="CHW Dashboard"
+        title="Welcome to your home dashboard"
+        description="This placeholder page will connect to patient, visit, and appointment workflows in later phases."
+      />
+    </section>
+>>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
   );
 }
