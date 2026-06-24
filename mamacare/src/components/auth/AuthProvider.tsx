@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth/session';
 import { SESSION_TIMEOUT_MS } from '@/lib/constants';
 import type { UserProfile } from '@/types';
@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
   const [loading] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
   const logout = useCallback(() => {

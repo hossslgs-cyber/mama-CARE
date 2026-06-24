@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { supabase } from '@/lib/db/supabase';
+import { createClient } from '@/lib/supabase/client';
 import type { PatientRecord, VisitRecord } from '@/types';
 import { calculateTriage } from '@/lib/utils/triage';
 import { AlertCircle, User, MapPin, Calendar, ExternalLink } from 'lucide-react';
@@ -18,6 +18,7 @@ export function NurseRiskFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     async function loadHighRiskCases() {
@@ -73,11 +74,11 @@ export function NurseRiskFeed() {
       {alerts.length > 0 ? alerts.map((visit) => {
         const triage = calculateTriage(visit);
         return (
-          <div key={visit.id} className="group relative overflow-hidden rounded-[2rem] border border-rose-100 bg-white p-6 shadow-sm hover:shadow-md transition-all">
+          <div key={visit.id} className="group relative overflow-hidden rounded-[2rem] border border-rose-100 bg-white p-6 shadow-sm hover:shadow-md transition-all animate-ecg-sweep">
             <div className="absolute top-0 left-0 h-full w-1.5 bg-rose-500" />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 animate-heartbeat">
                   <AlertCircle className="h-6 w-6" />
                 </div>
                 <div>

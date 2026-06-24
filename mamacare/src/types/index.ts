@@ -67,3 +67,26 @@ export interface DecisionTreeResult {
   action_steps: string[];
   referral_needed: boolean;
 }
+
+export type LoginMethod = 'phone' | 'email';
+
+export type MessageType = 'error' | 'success';
+
+export interface MessageState {
+  text: string;
+  type: MessageType;
+}
+
+export interface JourneyStageData {
+  id: string;
+  label: string;
+  sublabel: string;
+  icon: string;
+}
+
+export interface LoginFormData {
+  phone: string;
+  pin: string;
+  email: string;
+  password: string;
+}

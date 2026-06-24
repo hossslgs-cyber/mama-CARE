@@ -1,16 +1,16 @@
-<<<<<<< HEAD
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { AnalyticsSummary } from '@/components/dashboard/AnalyticsSummary';
 import Link from 'next/link';
 import { UserPlus, ClipboardList } from 'lucide-react';
+import { PageHeader } from '@/components/ui';
 
 export default function CHWHomePage() {
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-[0.25em] text-teal-700 font-bold">Community Dashboard</p>
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Habari, Health Worker</h2>
-      </header>
+      <PageHeader
+        label="Community Dashboard"
+        title="Habari, Health Worker"
+      />
 
       <AnalyticsSummary />
 
@@ -36,18 +36,5 @@ export default function CHWHomePage() {
         <RecentActivity />
       </section>
     </div>
-=======
-import { PageHeader } from '@/components/ui';
-
-export default function CHWHomePage() {
-  return (
-    <section className="space-y-3">
-      <PageHeader
-        label="CHW Dashboard"
-        title="Welcome to your home dashboard"
-        description="This placeholder page will connect to patient, visit, and appointment workflows in later phases."
-      />
-    </section>
->>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
   );
 }

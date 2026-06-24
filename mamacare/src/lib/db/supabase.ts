@@ -1,31 +1,10 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+// MODIFIED: Admin-only client (service role). Do NOT use in client components.
+// Use createClient() from @/lib/supabase/client for browser/server auth-aware access.
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey);
-}
-
-function createSupabaseClient(): SupabaseClient {
-  if (!isSupabaseConfigured()) {
-    console.warn(
-      '[MamaCare] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are not set. ' +
-      'Running in offline-only mode.'
-    );
-    // Return a client with placeholder values; callers must check isSupabaseConfigured() first
-    return createClient('http://localhost', 'placeholder', {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false,
-    },
-  });
-}
-
-export const supabase = createSupabaseClient();
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});

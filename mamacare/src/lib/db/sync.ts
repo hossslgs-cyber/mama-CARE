@@ -1,8 +1,9 @@
-import { supabase } from './supabase';
-import { getAllRecords, putRecord, deleteRecord, getRecord } from './indexeddb';
+import { createClient } from '@/lib/supabase/client';
+import { getAllRecords, putRecord, deleteRecord } from './indexeddb';
 import type { SyncQueueItem } from '@/types';
 
 export async function processSyncQueue() {
+  const supabase = createClient();
   const MAX_RETRIES = 3;
   const queue = await getAllRecords<SyncQueueItem>('syncQueue');
   const pendingItems = queue
@@ -18,7 +19,7 @@ export async function processSyncQueue() {
     try {
       const { error } = await supabase
         .from(item.table)
-        .upsert(item.payload as any);
+        .upsert(item.payload as Record<string, unknown>);
 
       if (error) throw error;
 

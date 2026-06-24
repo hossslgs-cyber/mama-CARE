@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/db/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { calculateTriage } from '@/lib/utils/triage';
 import { ShieldCheck, Users, AlertTriangle, TrendingUp } from 'lucide-react';
 
@@ -22,55 +22,66 @@ export function NurseAnalytics() {
   const [stats, setStats] = useState(DEMO_STATS);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     async function loadStats() {
-      // Skip Supabase query if user has no real auth session (demo / anon users)
-      // This prevents RLS error 42501 "permission denied" for unauthenticated queries
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      if (!authSession) {
-        setStats(DEMO_STATS);
-        setIsDemo(true);
+      try {
+        // Skip Supabase query if user has no real auth session (demo / anon users)
+        // This prevents RLS error 42501 "permission denied" for unauthenticated queries
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (!authSession) {
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data: visits, error: visitsError } = await supabase.from('visits').select('*, patients(*)').limit(100);
+        const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
+
+        if (visitsError) {
+          console.error('Supabase error:', visitsError.message, visitsError.code, visitsError.details);
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          return;
+        }
+
+        if (patientsError) {
+          console.error('Supabase error:', patientsError.message, patientsError.code, patientsError.details);
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          return;
+        }
+
+        if (visits && patients) {
+          let red = 0, yellow = 0, green = 0;
+          visits.forEach(v => {
+            const level = calculateTriage(v).triage_level;
+            if (level === 'red') red++;
+            else if (level === 'yellow') yellow++;
+            else green++;
+          });
+
+          // Simple village aggregation
+          const villageMap = new Map();
+          patients.forEach(p => {
+            villageMap.set(p.village, (villageMap.get(p.village) || 0) + 1);
+          });
+
+          setStats({
+            totalMothers: patients.length,
+            redCount: red,
+            yellowCount: yellow,
+            greenCount: green,
+            villageStats: Array.from(villageMap.entries()).map(([name, count]) => ({ name, count }))
+          });
+        }
+      } catch (err: any) {
+        console.error('Error fetching analytics:', err?.message || err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data: visits, error: visitsError } = await supabase.from('visits').select('*, patients(*)').limit(100);
-      const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
-
-      if (visitsError || patientsError) {
-        const err = visitsError || patientsError;
-        console.error('Failed to load analytics — code:', err?.code, '| message:', err?.message);
-        setStats(DEMO_STATS);
-        setIsDemo(true);
-        setLoading(false);
-        return;
-      }
-
-      if (visits && patients) {
-        let red = 0, yellow = 0, green = 0;
-        visits.forEach(v => {
-          const level = calculateTriage(v).triage_level;
-          if (level === 'red') red++;
-          else if (level === 'yellow') yellow++;
-          else green++;
-        });
-
-        // Simple village aggregation
-        const villageMap = new Map();
-        patients.forEach(p => {
-          villageMap.set(p.village, (villageMap.get(p.village) || 0) + 1);
-        });
-
-        setStats({
-          totalMothers: patients.length,
-          redCount: red,
-          yellowCount: yellow,
-          greenCount: green,
-          villageStats: Array.from(villageMap.entries()).map(([name, count]) => ({ name, count }))
-        });
-      }
-      setLoading(false);
     }
     loadStats();
   }, []);

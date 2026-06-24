@@ -50,8 +50,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navLinks = isNurse ? nurseNav : chwNav;
   const roleLabel = isNurse ? 'Supervisor' : 'Health Worker';
   const RoleIcon = isNurse ? Stethoscope : UserCheck;
-  const initials = session.userId
-    ? session.userId.slice(0, 2).toUpperCase()
+  const initials = session.id
+    ? session.id.slice(0, 2).toUpperCase()
     : (isNurse ? 'NS' : 'CW');
 
   return (
@@ -79,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               return (
                 <Link
                   key={href}
-                  href={href}
+                  href={href as any}
                   className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                     active
                       ? 'bg-teal-600 text-white shadow-md shadow-teal-200'
@@ -129,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return (
               <Link
                 key={href}
-                href={href}
+                href={href as any}
                 className={`flex flex-1 flex-col items-center gap-1 py-3 text-[10px] font-bold uppercase tracking-wider transition-colors ${
                   active ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'
                 }`}

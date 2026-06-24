@@ -1,32 +1,47 @@
-<<<<<<< HEAD
 "use client";
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/db/supabase';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { NurseRiskFeed } from '@/components/dashboard/NurseRiskFeed';
 import { NurseAnalytics } from '@/components/dashboard/NurseAnalytics';
 import { Search, Filter, Download } from 'lucide-react';
-=======
 import { PageHeader } from '@/components/ui';
->>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
 
 export default function NurseHomePage() {
-  const [chwActivity, setChwActivity] = useState<any[]>([]);
+  const router = useRouter();
+  const [chwActivity, setChwActivity] = useState<{ chw_id: string; lastSync: string }[]>([]);
+  const [supabase] = useState(() => createClient());
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<{ id: string; full_name: string; village: string }[]>([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchChwActivity() {
-      const { data } = await supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('visits')
         .select('chw_id, created_at')
         .order('created_at', { ascending: false })
         .limit(20);
-      
+
+      if (error) {
+        console.error('Failed to fetch CHW activity:', error.message);
+        return;
+      }
+
+      if (cancelled) return;
+
       if (data) {
-        const map = new Map();
+        const map = new Map<string, string>();
         data.forEach(v => {
           if (v.chw_id && !map.has(v.chw_id)) {
             map.set(v.chw_id, v.created_at);
@@ -36,7 +51,9 @@ export default function NurseHomePage() {
       }
     }
     fetchChwActivity();
-  }, []);
+
+    return () => { cancelled = true; };
+  }, [supabase, router]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -46,12 +63,25 @@ export default function NurseHomePage() {
 
     const delayDebounce = setTimeout(async () => {
       setSearching(true);
-      const { data } = await supabase
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setSearching(false);
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('patients')
         .select('id, full_name, village')
         .or(`full_name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
         .limit(5);
-      
+
+      if (error) {
+        console.error('Search failed:', error.message);
+        setSearching(false);
+        return;
+      }
+
       if (data) {
         setSearchResults(data);
       }
@@ -59,7 +89,7 @@ export default function NurseHomePage() {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  }, [searchQuery, supabase]);
 
   const getRelativeTime = (timeStr: string) => {
     const elapsed = Date.now() - new Date(timeStr).getTime();
@@ -72,14 +102,13 @@ export default function NurseHomePage() {
   };
 
   return (
-<<<<<<< HEAD
     <div className="space-y-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-teal-700 font-bold">Supervisor Dashboard</p>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">District Oversight</h2>
-          <p className="text-slate-500 mt-1">Reviewing community health data and prioritizing high-risk cases.</p>
-        </div>
+        <PageHeader
+          label="Supervisor Dashboard"
+          title="District Oversight"
+          description="Reviewing community health data and prioritizing high-risk cases."
+        />
         <div className="flex gap-2">
           <button className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
             <Filter className="h-4 w-4" />
@@ -158,14 +187,5 @@ export default function NurseHomePage() {
         </aside>
       </div>
     </div>
-=======
-    <section className="space-y-3">
-      <PageHeader
-        label="Nurse Dashboard"
-        title="District nurse overview"
-        description="Role-based access is now in place. Later phases will add the full patient reviews and filters here."
-      />
-    </section>
->>>>>>> 581de9dc37b8db1e8a90e9efd8be6cf815f89f4c
   );
 }

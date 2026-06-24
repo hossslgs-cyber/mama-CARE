@@ -1,6 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// MODIFIED: Replaced with @supabase/ssr browser client factory.
+// Import createClient from '@/lib/supabase/client' instead of using a static instance.
+export { createClient, isSupabaseConfigured } from './supabase/client';
