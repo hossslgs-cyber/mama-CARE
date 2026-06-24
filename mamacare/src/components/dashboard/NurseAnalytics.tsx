@@ -1,0 +1,151 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { calculateTriage } from '@/lib/utils/triage';
+import { ShieldCheck, Users, AlertTriangle, TrendingUp } from 'lucide-react';
+
+const DEMO_STATS = {
+  totalMothers: 48,
+  redCount: 3,
+  yellowCount: 12,
+  greenCount: 33,
+  villageStats: [
+    { name: 'Freetown East', count: 18 },
+    { name: 'Bo District',   count: 14 },
+    { name: 'Kenema',        count: 10 },
+    { name: 'Makeni',        count: 6  },
+  ],
+};
+
+export function NurseAnalytics() {
+  const [stats, setStats] = useState(DEMO_STATS);
+  const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
+  const [supabase] = useState(() => createClient());
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        // Skip Supabase query if user has no real auth session (demo / anon users)
+        // This prevents RLS error 42501 "permission denied" for unauthenticated queries
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (!authSession) {
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data: visits, error: visitsError } = await supabase.from('visits').select('*, patients(*)').limit(100);
+        const { data: patients, error: patientsError } = await supabase.from('patients').select('village');
+
+        if (visitsError) {
+          console.error('Supabase error:', visitsError.message, visitsError.code, visitsError.details);
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          return;
+        }
+
+        if (patientsError) {
+          console.error('Supabase error:', patientsError.message, patientsError.code, patientsError.details);
+          setStats(DEMO_STATS);
+          setIsDemo(true);
+          return;
+        }
+
+        if (visits && patients) {
+          let red = 0, yellow = 0, green = 0;
+          visits.forEach(v => {
+            const level = calculateTriage(v).triage_level;
+            if (level === 'red') red++;
+            else if (level === 'yellow') yellow++;
+            else green++;
+          });
+
+          // Simple village aggregation
+          const villageMap = new Map();
+          patients.forEach(p => {
+            villageMap.set(p.village, (villageMap.get(p.village) || 0) + 1);
+          });
+
+          setStats({
+            totalMothers: patients.length,
+            redCount: red,
+            yellowCount: yellow,
+            greenCount: green,
+            villageStats: Array.from(villageMap.entries()).map(([name, count]) => ({ name, count }))
+          });
+        }
+      } catch (err: any) {
+        console.error('Error fetching analytics:', err?.message || err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
+  if (loading) return <div className="h-48 animate-pulse rounded-[2.5rem] bg-slate-50" />;
+
+
+  return (
+    <div className="space-y-6">
+      {isDemo && (
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">
+          ⚠ Demo data · Supabase unavailable
+        </p>
+      )}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Population</p>
+          <div className="flex items-center justify-between mt-2">
+            <h4 className="text-3xl font-black text-slate-900">{stats.totalMothers}</h4>
+            <Users className="h-6 w-6 text-blue-500" />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-rose-100 bg-rose-50 p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">Critical (Red)</p>
+          <div className="flex items-center justify-between mt-2">
+            <h4 className="text-3xl font-black text-rose-600">{stats.redCount}</h4>
+            <AlertTriangle className="h-6 w-6 text-rose-500" />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-amber-100 bg-amber-50 p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Moderate (Yellow)</p>
+          <div className="flex items-center justify-between mt-2">
+            <h4 className="text-3xl font-black text-amber-600">{stats.yellowCount}</h4>
+            <TrendingUp className="h-6 w-6 text-amber-500" />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Normal (Green)</p>
+          <div className="flex items-center justify-between mt-2">
+            <h4 className="text-3xl font-black text-emerald-600">{stats.greenCount}</h4>
+            <ShieldCheck className="h-6 w-6 text-emerald-500" />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-sm">
+        <h3 className="mb-6 text-lg font-bold text-slate-900">District Coverage by Village</h3>
+        <div className="space-y-4">
+          {stats.villageStats.map(v => (
+            <div key={v.name} className="space-y-2">
+              <div className="flex justify-between text-xs font-bold text-slate-600">
+                <span>{v.name}</span>
+                <span>{v.count} mothers</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-slate-100">
+                <div 
+                  className="h-full rounded-full bg-teal-500 transition-all" 
+                  style={{ width: `${(v.count / stats.totalMothers) * 100}%` }} 
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

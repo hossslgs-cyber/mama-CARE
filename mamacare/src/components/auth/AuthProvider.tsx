@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isSupabaseConfigured, supabase } from '@/lib/db/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { clearAuthCookie, getAuthCookie, setAuthCookie } from '@/lib/auth/session';
 import { SESSION_TIMEOUT_MS } from '@/lib/constants';
 import type { UserProfile } from '@/types';
@@ -47,6 +47,27 @@ function saveStoredSession(session: AuthSession | null) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => {
+    // Check for 'mamacare-auth' cookie first
+    if (typeof window !== 'undefined') {
+      try {
+        const match = document.cookie
+          .split('; ')
+          .find(row => row.trim().startsWith('mamacare-auth='));
+        if (match) {
+          const payload = JSON.parse(decodeURIComponent(match.split('=')[1]));
+          if (payload.role && payload.expiresAt && payload.expiresAt > Date.now()) {
+            return {
+              id: payload.userId,
+              phone: payload.userId,
+              role: payload.role,
+              name: payload.role === 'nurse' ? 'District Nurse' : 'Community Health Worker',
+              lastActiveAt: Date.now(),
+            };
+          }
+        }
+      } catch {}
+    }
+
     const stored = getStoredSession();
     const cookie = getAuthCookie();
 
@@ -59,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
   const [loading] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
   const logout = useCallback(() => {

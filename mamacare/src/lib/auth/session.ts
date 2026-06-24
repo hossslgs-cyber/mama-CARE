@@ -19,9 +19,17 @@ export function getAuthCookie(): SessionCookiePayload | null {
     return null;
   }
 
-  const cookie = document.cookie
+  // Try to parse 'mamacare-auth' cookie first
+  let cookie = document.cookie
     .split('; ')
-    .find((item) => item.startsWith(`${AUTH_COOKIE_NAME}=`));
+    .find((item) => item.startsWith('mamacare-auth='));
+
+  // Fall back to existing cookie logic if not found
+  if (!cookie && AUTH_COOKIE_NAME !== 'mamacare-auth') {
+    cookie = document.cookie
+      .split('; ')
+      .find((item) => item.startsWith(`${AUTH_COOKIE_NAME}=`));
+  }
 
   if (!cookie) {
     return null;
