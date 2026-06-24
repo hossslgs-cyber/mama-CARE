@@ -1,93 +1,35 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
   Search,
-  User,
   MapPin,
   Calendar,
   AlertTriangle,
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
+import { demoPatients } from '@/lib/demo-data';
 
-const DEMO_PATIENTS = [
-  {
-    id: 'demo-001',
-    name: 'Aminata Conteh',
-    full_name: 'Aminata Conteh',
-    village: 'Kono',
-    edd: '2026-08-15',
-    gravida: 2,
-    para: 1,
-    age: 24,
-    phone: '+23276123456',
-    risk_factors: ['severe_anemia', 'preeclampsia'],
-    created_at: '2026-06-01T10:00:00Z',
-    updated_at: '2026-06-15T14:30:00Z'
-  },
-  {
-    id: 'demo-002',
-    name: 'Fatima Kamara',
-    full_name: 'Fatima Kamara',
-    village: 'Bo',
-    edd: '2026-09-20',
-    gravida: 1,
-    para: 0,
-    age: 19,
-    phone: '+23276987654',
-    risk_factors: [],
-    created_at: '2026-06-05T09:00:00Z',
-    updated_at: '2026-06-18T11:00:00Z'
-  },
-  {
-    id: 'demo-003',
-    name: 'Mariama Sesay',
-    full_name: 'Mariama Sesay',
-    village: 'Makeni',
-    edd: '2026-07-30',
-    gravida: 3,
-    para: 2,
-    age: 28,
-    phone: '+23276543210',
-    risk_factors: ['gestational_diabetes'],
-    created_at: '2026-05-20T08:00:00Z',
-    updated_at: '2026-06-10T16:00:00Z'
-  },
-  {
-    id: 'demo-004',
-    name: 'Isatu Bangura',
-    full_name: 'Isatu Bangura',
-    village: 'Kono',
-    edd: '2026-10-05',
-    gravida: 1,
-    para: 0,
-    age: 22,
-    phone: '+23276111111',
-    risk_factors: [],
-    created_at: '2026-06-10T12:00:00Z',
-    updated_at: '2026-06-20T10:00:00Z'
-  },
-  {
-    id: 'demo-005',
-    name: 'Adama Jalloh',
-    full_name: 'Adama Jalloh',
-    village: 'Freetown',
-    edd: '2026-08-01',
-    gravida: 2,
-    para: 1,
-    age: 26,
-    phone: '+23276222222',
-    risk_factors: ['hypertension', 'previous_c_section'],
-    created_at: '2026-04-15T07:00:00Z',
-    updated_at: '2026-06-12T13:00:00Z'
-  }
-];
+const mappedPatients = demoPatients.map(p => ({
+  id: p.id,
+  name: p.fullName,
+  full_name: p.fullName,
+  village: p.village,
+  edd: p.edd,
+  gravida: p.gravida,
+  para: p.para,
+  age: p.age,
+  phone: p.phone,
+  risk_factors: p.riskLevel === 'low' ? [] : p.riskFactors,
+  created_at: p.visits[0]?.visitDate + 'T00:00:00Z',
+  updated_at: p.visits[p.visits.length - 1]?.visitDate + 'T00:00:00Z',
+}));
 
 export default function NursePatientsPage() {
-  const [patients] = useState(DEMO_PATIENTS);
+  const [patients] = useState(mappedPatients);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'Critical' | 'Moderate' | 'Normal'>('All');
 

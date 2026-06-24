@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { seedDemoDataIfNeeded } from '@/lib/seed-demo-data';
 import {
   Heart,
   LayoutDashboard,
@@ -31,6 +32,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { session, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (session && session.role === 'chw') {
+      seedDemoDataIfNeeded();
+    }
+  }, [session]);
   const pathname = usePathname();
 
   if (!mounted) return null;

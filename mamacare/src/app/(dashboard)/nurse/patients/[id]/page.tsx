@@ -2,8 +2,9 @@
 
 import { useEffect, useState, use } from 'react';
 import { calculateTriage } from '@/lib/utils/triage';
+import { demoPatients } from '@/lib/demo-data';
 import Link from 'next/link';
-import { ArrowLeft, User, Stethoscope, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Stethoscope, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -19,81 +20,37 @@ interface Patient {
   updated_at: string;
 }
 
-const DEMO_PATIENTS: Record<string, Patient> = {
-  'demo-001': {
-    id: 'demo-001',
-    full_name: 'Aminata Conteh',
-    village: 'Kono',
-    age: 24,
-    phone: '+23276123456',
-    edd: '2026-08-15',
-    gravida: 2,
-    para: 1,
-    risk_factors: ['severe_anemia', 'preeclampsia'],
-    created_at: '2026-06-01T10:00:00Z',
-    updated_at: '2026-06-15T14:30:00Z'
-  },
-  'demo-002': {
-    id: 'demo-002',
-    full_name: 'Fatima Kamara',
-    village: 'Bo',
-    age: 19,
-    phone: '+23276987654',
-    edd: '2026-09-20',
-    gravida: 1,
-    para: 0,
-    risk_factors: [],
-    created_at: '2026-06-05T09:00:00Z',
-    updated_at: '2026-06-18T11:00:00Z'
-  },
-  'demo-003': {
-    id: 'demo-003',
-    full_name: 'Mariama Sesay',
-    village: 'Makeni',
-    age: 28,
-    phone: '+23276543210',
-    edd: '2026-07-30',
-    gravida: 3,
-    para: 2,
-    risk_factors: ['gestational_diabetes'],
-    created_at: '2026-05-20T08:00:00Z',
-    updated_at: '2026-06-10T16:00:00Z'
-  },
-  'demo-004': {
-    id: 'demo-004',
-    full_name: 'Isatu Bangura',
-    village: 'Kono',
-    age: 22,
-    phone: '+23276111111',
-    edd: '2026-10-05',
-    gravida: 1,
-    para: 0,
-    risk_factors: [],
-    created_at: '2026-06-10T12:00:00Z',
-    updated_at: '2026-06-20T10:00:00Z'
-  },
-  'demo-005': {
-    id: 'demo-005',
-    full_name: 'Adama Jalloh',
-    village: 'Freetown',
-    age: 26,
-    phone: '+23276222222',
-    edd: '2026-08-01',
-    gravida: 2,
-    para: 1,
-    risk_factors: ['hypertension', 'previous_c_section'],
-    created_at: '2026-04-15T07:00:00Z',
-    updated_at: '2026-06-12T13:00:00Z'
-  }
-};
+const PATIENTS_MAP: Record<string, Patient> = Object.fromEntries(
+  demoPatients.map(p => [
+    p.id,
+    {
+      id: p.id,
+      full_name: p.fullName,
+      village: p.village,
+      age: p.age,
+      phone: p.phone,
+      edd: p.edd,
+      gravida: p.gravida,
+      para: p.para,
+      risk_factors: p.riskFactors,
+      created_at: p.visits[0]?.visitDate + 'T00:00:00Z',
+      updated_at: p.visits[p.visits.length - 1]?.visitDate + 'T00:00:00Z',
+    },
+  ])
+);
 
-const DEMO_VISITS = [
-  { id: 'v-001', patient_id: 'demo-001', visit_date: '2026-06-15', chw_id: 'chw-001', bp_systolic: 140, bp_diastolic: 90, weight: 68, notes: 'Patient reports headache' },
-  { id: 'v-002', patient_id: 'demo-002', visit_date: '2026-06-18', chw_id: 'chw-002', bp_systolic: 120, bp_diastolic: 80, weight: 55, notes: 'Normal checkup' },
-  { id: 'v-003', patient_id: 'demo-003', visit_date: '2026-06-10', chw_id: 'demo-001', bp_systolic: 130, bp_diastolic: 85, weight: 72, notes: 'Blood sugar elevated' },
-  { id: 'v-004', patient_id: 'demo-001', visit_date: '2026-05-20', chw_id: 'chw-001', bp_systolic: 138, bp_diastolic: 88, weight: 66, notes: 'Follow-up required' },
-  { id: 'v-005', patient_id: 'demo-005', visit_date: '2026-06-12', chw_id: 'chw-003', bp_systolic: 150, bp_diastolic: 95, weight: 70, notes: 'High BP, referred to clinic' }
-];
+const ALL_VISITS = demoPatients.flatMap(p =>
+  p.visits.map(v => ({
+    id: v.id,
+    patient_id: p.id,
+    visit_date: v.visitDate,
+    chw_id: v.chwId,
+    bp_systolic: v.bpSystolic,
+    bp_diastolic: v.bpDiastolic,
+    weight: v.weight,
+    notes: v.notes,
+  }))
+);
 
 export default function NursePatientReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -103,8 +60,8 @@ export default function NursePatientReviewPage({ params }: { params: Promise<{ i
 
   useEffect(() => {
     function loadData() {
-      const p = DEMO_PATIENTS[id] || DEMO_PATIENTS['demo-001'];
-      const v = DEMO_VISITS.filter(visit => visit.patient_id === p.id);
+      const p = PATIENTS_MAP[id] || PATIENTS_MAP['SL-001'];
+      const v = ALL_VISITS.filter(visit => visit.patient_id === p.id);
 
       // Map visits to align with UI expectations (e.g. blood_pressure, summary, etc.)
       const mappedVisits = v.map(visit => ({
